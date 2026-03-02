@@ -31,8 +31,8 @@ MacBook (Swift daemon)                        iPhone
 ## Install
 
 ```bash
-git clone https://github.com/sahiny/charge-alert.git
-cd charge-alert
+git clone https://github.com/sahinyes/charge-guard.git
+cd charge-guard
 chmod +x scripts/install.sh
 ./scripts/install.sh
 ```
