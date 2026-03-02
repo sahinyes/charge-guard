@@ -81,6 +81,17 @@ tail -f /tmp/charge-alert.err.log
 # You should receive a notification within 5-10 seconds
 ```
 
+## CLI Commands
+
+```bash
+charge-alert trust        # Add current WiFi to trusted networks
+charge-alert untrust      # Remove current WiFi from trusted networks
+charge-alert trust-list   # Show trusted networks and current connection
+charge-alert trust-pick   # Pick from known WiFi networks to trust
+```
+
+> **Note:** The running daemon reads config at startup. After `trust`/`untrust`, restart the daemon: `./scripts/install.sh`
+
 ## Configuration
 
 Config lives at `~/.config/charge-alert/config.json`:
@@ -92,7 +103,8 @@ Config lives at `~/.config/charge-alert/config.json`:
     "tailscaleIP": "100.x.x.x",
     "serverPort": 8080,
     "locationTimeout": 10,
-    "cooldownSeconds": 30
+    "cooldownSeconds": 30,
+    "trustedWiFiNetworks": ["HomeWiFi", "OfficeWiFi-5G"]
 }
 ```
 
@@ -104,6 +116,7 @@ Config lives at `~/.config/charge-alert/config.json`:
 | `serverPort` | Map server port | `8080` |
 | `locationTimeout` | Location request timeout (seconds) | `10` |
 | `cooldownSeconds` | Min seconds between alerts | `30` |
+| `trustedWiFiNetworks` | WiFi networks where alerts are suppressed | `[]` (none) |
 
 ## Uninstall
 
@@ -115,6 +128,7 @@ Config is preserved. To fully remove: `rm -rf ~/.config/charge-alert`
 
 ## Edge Cases
 
+- **Trusted WiFi**: Alerts suppressed when connected to a whitelisted network (WiFi off or SSID unreadable = alert fires, fail-safe)
 - **Charger removed during sleep**: Detected on wake via `NSWorkspace.didWakeNotification`
 - **Location Services off**: Notification sent without coordinates, logs show instructions
 - **ntfy.sh down**: 1 retry after 3s, then logs error (best-effort)

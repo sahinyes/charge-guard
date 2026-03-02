@@ -11,6 +11,7 @@ let package = Package(
             path: "Sources/ChargeAlert",
             exclude: ["Resources/Info.plist"],
             linkerSettings: [
+                .linkedFramework("CoreWLAN"),
                 .unsafeFlags([
                     "-Xlinker", "-sectcreate",
                     "-Xlinker", "__TEXT",

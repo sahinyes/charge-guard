@@ -9,6 +9,7 @@ struct Config: Codable {
     var serverPort: UInt16
     var locationTimeout: Int
     var cooldownSeconds: Int
+    var trustedWiFiNetworks: [String]?
 
     static let defaultConfig = Config(
         ntfyTopic: "charge-alert-\(UUID().uuidString.prefix(8).lowercased())",
@@ -18,7 +19,8 @@ struct Config: Codable {
         tailscaleIP: "",
         serverPort: 8090,
         locationTimeout: 10,
-        cooldownSeconds: 30
+        cooldownSeconds: 30,
+        trustedWiFiNetworks: []
     )
 
     static let configDir: URL = {
@@ -62,5 +64,14 @@ struct Config: Codable {
         }
 
         return config
+    }
+
+    func save() throws {
+        let fm = FileManager.default
+        try fm.createDirectory(at: Config.configDir, withIntermediateDirectories: true)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try encoder.encode(self)
+        try data.write(to: Config.configFile, options: .atomic)
     }
 }

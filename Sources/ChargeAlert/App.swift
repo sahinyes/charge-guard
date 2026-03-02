@@ -31,6 +31,10 @@ final class App {
     func start() {
         Log.info("charge-alert starting...")
         Log.info("Config: webhook=\(config.discordWebhookURL.isEmpty ? "(not set)" : "configured"), port=\(config.serverPort)")
+        let trusted = config.trustedWiFiNetworks ?? []
+        if !trusted.isEmpty {
+            Log.info("Trusted WiFi: \(trusted.joined(separator: ", "))")
+        }
         Log.info("Current power: \(wasOnAC ? "AC" : "Battery")")
 
         mapServer.start(port: config.serverPort)
@@ -76,11 +80,13 @@ final class App {
                 Log.info("Cooldown active (\(Int(elapsed))s / \(config.cooldownSeconds)s). Skipping alert.")
                 return
             }
+            guard !shouldSuppressAlert() else { return }
             lastAlertTime = now
             Log.info("*** CHARGER DISCONNECTED — triggering alert ***")
             triggerAlert(event: .disconnected)
         } else if connected {
             lastAlertTime = .distantPast  // Reset cooldown — next unplug is a fresh event
+            guard !shouldSuppressAlert() else { return }
             Log.info("*** CHARGER CONNECTED ***")
             triggerAlert(event: .connected)
         }
@@ -126,11 +132,24 @@ final class App {
                 return
             }
 
+            guard !shouldSuppressAlert() else { return }
             lastAlertTime = now
             Log.info("*** CHARGER REMOVED DURING SLEEP — triggering alert ***")
             triggerAlert(event: .disconnected)
         } else {
             wasOnAC = isOnAC
         }
+    }
+
+    // MARK: - WiFi Suppression
+
+    private func shouldSuppressAlert() -> Bool {
+        let trusted = config.trustedWiFiNetworks ?? []
+        guard !trusted.isEmpty else { return false }
+        if let ssid = WiFiMonitor.currentSSID(), trusted.contains(ssid) {
+            Log.info("Trusted WiFi '\(ssid)' — alert suppressed")
+            return true
+        }
+        return false
     }
 }
