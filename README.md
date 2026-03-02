@@ -1,6 +1,6 @@
-# charge-alert
+<h1 align="center">charge-guard</h1>
 
-MacBook anti-theft alert system. Sends a push notification to your iPhone when the charger is disconnected, with a live location map accessible over Tailscale.
+<p align="center">MacBook anti-theft alert system. Sends a push notification to your iPhone when the charger is disconnected, with a live location map accessible over Tailscale.</p>
 
 No Apple Developer Account required. Zero external dependencies.
 
@@ -140,6 +140,3 @@ Config is preserved. To fully remove: `rm -rf ~/.config/charge-alert`
 - **Rapid plug/unplug**: 30s cooldown prevents duplicate alerts
 - **Port conflict**: Map server fails gracefully, notifications still work
 
-## License
-
-MIT
