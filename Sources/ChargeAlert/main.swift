@@ -15,6 +15,8 @@ if let command {
         handleTrustList()
     case "trust-pick":
         handleTrustPick()
+    case "test-alert":
+        handleTestAlert()
     case "help", "--help", "-h":
         handleHelp()
     default:
@@ -171,6 +173,23 @@ func handleTrustPick() -> Never {
     exit(0)
 }
 
+func handleTestAlert() -> Never {
+    let event: NotificationSender.Event = CommandLine.arguments.count > 2 && CommandLine.arguments[2] == "connected"
+        ? .connected
+        : .disconnected
+    let config = Config.load()
+    let label = event == .disconnected ? "disconnected" : "connected"
+    print("Sending test \(label) alert...")
+    let semaphore = DispatchSemaphore(value: 0)
+    Task {
+        await NotificationSender.send(config: config, event: event)
+        semaphore.signal()
+    }
+    semaphore.wait()
+    print("Done.")
+    exit(0)
+}
+
 func handleHelp() -> Never {
     printUsage()
     exit(0)
@@ -185,6 +204,7 @@ func printUsage() {
       untrust      Remove current WiFi network from trusted list
       trust-list   Show trusted networks and current connection
       trust-pick   Pick from known WiFi networks to trust
+      test-alert   Send a test notification (default: disconnected, pass 'connected' for connected)
       help         Show this help message
 
     Running without a command starts the daemon.

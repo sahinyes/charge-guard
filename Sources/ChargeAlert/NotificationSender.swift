@@ -37,6 +37,9 @@ enum NotificationSender {
         request.setValue(title, forHTTPHeaderField: "Title")
         request.setValue(priority, forHTTPHeaderField: "Priority")
         request.setValue(tags, forHTTPHeaderField: "Tags")
+        if case .disconnected = event {
+            request.setValue("view, Find My, findmy://", forHTTPHeaderField: "Actions")
+        }
         request.httpBody = body.data(using: .utf8)
 
         await sendHTTP(request: request, label: "ntfy")
