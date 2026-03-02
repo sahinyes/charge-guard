@@ -74,16 +74,17 @@ tailscale ip -4
 ### 4. Verify
 
 ```bash
-# Check it's running
-tail -f /tmp/charge-alert.err.log
+# Send a test notification
+charge-alert test-alert
 
-# Test: unplug your charger
-# You should receive a notification within 5-10 seconds
+# Check logs
+tail -f /tmp/charge-alert.err.log
 ```
 
 ## CLI Commands
 
 ```bash
+charge-alert test-alert   # Send a test notification to verify setup
 charge-alert trust        # Add current WiFi to trusted networks
 charge-alert untrust      # Remove current WiFi from trusted networks
 charge-alert trust-list   # Show trusted networks and current connection
@@ -98,12 +99,14 @@ Config lives at `~/.config/charge-alert/config.json`:
 
 ```json
 {
-    "ntfyTopic": "charge-alert-a1b2c3d4",
-    "ntfyServer": "https://ntfy.sh",
-    "tailscaleIP": "100.x.x.x",
-    "serverPort": 8080,
-    "locationTimeout": 10,
     "cooldownSeconds": 30,
+    "discordEnabled": false,
+    "discordWebhookURL": "",
+    "locationTimeout": 10,
+    "ntfyServer": "https://ntfy.sh",
+    "ntfyTopic": "charge-alert-a1b2c3d4",
+    "serverPort": 8090,
+    "tailscaleIP": "100.x.x.x",
     "trustedWiFiNetworks": ["HomeWiFi", "OfficeWiFi-5G"]
 }
 ```
@@ -112,8 +115,10 @@ Config lives at `~/.config/charge-alert/config.json`:
 |---|---|---|
 | `ntfyTopic` | Unique topic for notifications (auto-generated) | UUID-based |
 | `ntfyServer` | ntfy server URL | `https://ntfy.sh` |
-| `tailscaleIP` | Your MacBook's Tailscale IP | `` |
-| `serverPort` | Map server port | `8080` |
+| `discordWebhookURL` | Discord webhook URL for notifications | `""` |
+| `discordEnabled` | Enable Discord notifications | `false` |
+| `tailscaleIP` | Your MacBook's Tailscale IP | `""` (set via install or manually) |
+| `serverPort` | Map server port | `8090` |
 | `locationTimeout` | Location request timeout (seconds) | `10` |
 | `cooldownSeconds` | Min seconds between alerts | `30` |
 | `trustedWiFiNetworks` | WiFi networks where alerts are suppressed | `[]` (none) |

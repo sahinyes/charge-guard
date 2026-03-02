@@ -36,6 +36,31 @@ sleep 1
 echo "==> Loading LaunchAgent..."
 launchctl bootstrap "$DOMAIN" "$LAUNCH_AGENTS_DIR/$PLIST_NAME"
 
+# Auto-detect Tailscale IP and write to config
+CONFIG_FILE="$HOME/.config/charge-alert/config.json"
+if command -v tailscale &>/dev/null; then
+    TS_IP=$(tailscale ip -4 2>/dev/null || true)
+    if [ -n "$TS_IP" ] && [ -f "$CONFIG_FILE" ]; then
+        CURRENT_IP=$(grep '"tailscaleIP"' "$CONFIG_FILE" | tr -d ' ",' | cut -d: -f2)
+        if [ -z "$CURRENT_IP" ] || [ "$CURRENT_IP" != "$TS_IP" ]; then
+            # Use osascript for reliable JSON editing via inline JXA
+            osascript -l JavaScript -e "
+                var fm = $.NSFileManager.defaultManager;
+                var path = '$CONFIG_FILE';
+                var data = $.NSData.alloc.initWithContentsOfFile(path);
+                var str = $.NSString.alloc.initWithDataEncoding(data, $.NSUTF8StringEncoding).js;
+                var obj = JSON.parse(str);
+                obj.tailscaleIP = '$TS_IP';
+                var out = JSON.stringify(obj, Object.keys(obj).sort(), 4);
+                $(out).writeToFileAtomicallyEncodingError(path, true, $.NSUTF8StringEncoding, null);
+            " 2>/dev/null && echo "==> Tailscale IP set to $TS_IP in config" || echo "WARN: Could not write Tailscale IP to config. Set it manually in $CONFIG_FILE"
+        fi
+    fi
+else
+    echo ""
+    echo "WARN: Tailscale not found. Install Tailscale and set 'tailscaleIP' manually in $CONFIG_FILE"
+fi
+
 echo ""
 echo "==> charge-alert installed and running!"
 echo ""
@@ -44,6 +69,11 @@ echo "  1. Install 'ntfy' app on your iPhone from the App Store"
 echo "  2. Run: cat ~/.config/charge-alert/config.json"
 echo "  3. Copy the 'ntfyTopic' value"
 echo "  4. In ntfy app: tap '+' → paste the topic → Subscribe"
+echo "  5. Test: charge-alert test-alert"
 echo ""
 echo "Logs: tail -f /tmp/charge-alert.err.log"
-echo "Map:  http://$(grep tailscaleIP ~/.config/charge-alert/config.json 2>/dev/null | tr -d ' ",' | cut -d: -f2):$(grep serverPort ~/.config/charge-alert/config.json 2>/dev/null | tr -d ' ",' | cut -d: -f2)/map"
+PORT=$(grep '"serverPort"' "$CONFIG_FILE" 2>/dev/null | tr -d ' ",' | cut -d: -f2)
+IP=$(grep '"tailscaleIP"' "$CONFIG_FILE" 2>/dev/null | tr -d ' ",' | cut -d: -f2)
+if [ -n "$IP" ] && [ -n "$PORT" ]; then
+    echo "Map:  http://${IP}:${PORT}/map"
+fi
