@@ -17,15 +17,13 @@ enum NotificationSender {
 
         let body: String
         let findMyAction = "view, Find My, findmy://"
+        request.setValue(findMyAction, forHTTPHeaderField: "Actions")
+
         if let location = location {
             let lat = location.coordinate.latitude
             let lon = location.coordinate.longitude
-            let mapURL = "http://\(config.tailscaleIP):\(config.serverPort)/map"
-            request.setValue(mapURL, forHTTPHeaderField: "Click")
-            request.setValue("view, Open Map, \(mapURL); \(findMyAction)", forHTTPHeaderField: "Actions")
-            body = "Location: \(lat), \(lon)\nMap: \(mapURL)"
+            body = "Location: \(lat), \(lon)"
         } else {
-            request.setValue(findMyAction, forHTTPHeaderField: "Actions")
             body = "Location unavailable - check Location Services"
         }
 
