@@ -26,11 +26,15 @@ echo "==> Installing LaunchAgent..."
 mkdir -p "$LAUNCH_AGENTS_DIR"
 cp "$PROJECT_DIR/$PLIST_NAME" "$LAUNCH_AGENTS_DIR/$PLIST_NAME"
 
+DOMAIN="gui/$(id -u)"
+SERVICE_LABEL="dev.sahiny.charge-alert"
+
 # Unload if already running
-launchctl bootout "gui/$(id -u)/$PLIST_NAME" 2>/dev/null || true
+launchctl bootout "$DOMAIN/$SERVICE_LABEL" 2>/dev/null || true
+sleep 1
 
 echo "==> Loading LaunchAgent..."
-launchctl bootstrap "gui/$(id -u)" "$LAUNCH_AGENTS_DIR/$PLIST_NAME"
+launchctl bootstrap "$DOMAIN" "$LAUNCH_AGENTS_DIR/$PLIST_NAME"
 
 echo ""
 echo "==> charge-alert installed and running!"

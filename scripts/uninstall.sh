@@ -6,8 +6,10 @@ INSTALL_DIR="/usr/local/bin"
 PLIST_NAME="dev.sahiny.charge-alert.plist"
 LAUNCH_AGENTS_DIR="$HOME/Library/LaunchAgents"
 
+SERVICE_LABEL="dev.sahiny.charge-alert"
+
 echo "==> Stopping charge-alert..."
-launchctl bootout "gui/$(id -u)/$PLIST_NAME" 2>/dev/null || true
+launchctl bootout "gui/$(id -u)/$SERVICE_LABEL" 2>/dev/null || true
 
 echo "==> Removing LaunchAgent..."
 rm -f "$LAUNCH_AGENTS_DIR/$PLIST_NAME"
