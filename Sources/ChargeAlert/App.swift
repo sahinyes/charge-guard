@@ -30,7 +30,7 @@ final class App {
 
     func start() {
         Log.info("charge-alert starting...")
-        Log.info("Config: topic=\(config.ntfyTopic), server=\(config.ntfyServer), port=\(config.serverPort)")
+        Log.info("Config: webhook=\(config.discordWebhookURL.isEmpty ? "(not set)" : "configured"), port=\(config.serverPort)")
         Log.info("Current power: \(wasOnAC ? "AC" : "Battery")")
 
         mapServer.start(port: config.serverPort)
@@ -65,44 +65,32 @@ final class App {
     // MARK: - Power Change Handling
 
     private func handlePowerChange(isOnAC: Bool) {
-        let transition = wasOnAC && !isOnAC
+        let disconnected = wasOnAC && !isOnAC
+        let connected = !wasOnAC && isOnAC
         wasOnAC = isOnAC
 
-        guard transition else { return }
-
-        // AC → Battery transition detected
-        let now = Date()
-        let elapsed = now.timeIntervalSince(lastAlertTime)
-        guard elapsed >= Double(config.cooldownSeconds) else {
-            Log.info("Cooldown active (\(Int(elapsed))s / \(config.cooldownSeconds)s). Skipping alert.")
-            return
+        if disconnected {
+            let now = Date()
+            let elapsed = now.timeIntervalSince(lastAlertTime)
+            guard elapsed >= Double(config.cooldownSeconds) else {
+                Log.info("Cooldown active (\(Int(elapsed))s / \(config.cooldownSeconds)s). Skipping alert.")
+                return
+            }
+            lastAlertTime = now
+            Log.info("*** CHARGER DISCONNECTED — triggering alert ***")
+            triggerAlert(event: .disconnected)
+        } else if connected {
+            lastAlertTime = .distantPast  // Reset cooldown — next unplug is a fresh event
+            Log.info("*** CHARGER CONNECTED ***")
+            triggerAlert(event: .connected)
         }
-
-        lastAlertTime = now
-        Log.info("*** CHARGER DISCONNECTED — triggering alert ***")
-        triggerAlert()
     }
 
-    private func triggerAlert() {
+    private func triggerAlert(event: NotificationSender.Event) {
         sleepAssertion.acquire()
 
         Task { @MainActor in
-            // FAST PATH: Send notification immediately with cached location (sub-1s)
-            let cached = locationProvider.cachedLocation
-            await NotificationSender.send(config: config, location: cached)
-            Log.info("Notification sent (cached location: \(cached != nil ? "yes" : "none"))")
-
-            // BACKGROUND: Request fresh location to update map server
-            let fresh = await locationProvider.requestLocation(timeout: config.locationTimeout)
-            if let loc = fresh {
-                mapServer.updateLocation(
-                    lat: loc.coordinate.latitude,
-                    lon: loc.coordinate.longitude,
-                    accuracy: loc.horizontalAccuracy
-                )
-                Log.info("Map updated with fresh location: \(loc.coordinate.latitude), \(loc.coordinate.longitude)")
-            }
-
+            await NotificationSender.send(config: config, event: event)
             sleepAssertion.release()
         }
     }
@@ -140,7 +128,7 @@ final class App {
 
             lastAlertTime = now
             Log.info("*** CHARGER REMOVED DURING SLEEP — triggering alert ***")
-            triggerAlert()
+            triggerAlert(event: .disconnected)
         } else {
             wasOnAC = isOnAC
         }

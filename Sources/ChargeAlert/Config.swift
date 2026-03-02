@@ -3,6 +3,8 @@ import Foundation
 struct Config: Codable {
     var ntfyTopic: String
     var ntfyServer: String
+    var discordWebhookURL: String
+    var discordEnabled: Bool
     var tailscaleIP: String
     var serverPort: UInt16
     var locationTimeout: Int
@@ -11,8 +13,10 @@ struct Config: Codable {
     static let defaultConfig = Config(
         ntfyTopic: "charge-alert-\(UUID().uuidString.prefix(8).lowercased())",
         ntfyServer: "https://ntfy.sh",
+        discordWebhookURL: "",
+        discordEnabled: false,
         tailscaleIP: "",
-        serverPort: 8080,
+        serverPort: 8090,
         locationTimeout: 10,
         cooldownSeconds: 30
     )
