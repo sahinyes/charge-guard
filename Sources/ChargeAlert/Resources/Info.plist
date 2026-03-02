@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>dev.sahiny.charge-alert</string>
+    <key>CFBundleName</key>
+    <string>charge-alert</string>
+    <key>NSLocationUsageDescription</key>
+    <string>charge-alert needs your location to include coordinates in theft alerts.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>charge-alert needs your location to include coordinates in theft alerts.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>charge-alert needs your location to show live position on the tracking map.</string>
+</dict>
+</plist>
